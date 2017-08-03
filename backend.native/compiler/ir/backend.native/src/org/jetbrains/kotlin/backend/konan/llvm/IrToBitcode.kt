@@ -1121,11 +1121,11 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         val result = value.initializer?.let { evaluateExpression(it) }
         val variableDescriptor = value.descriptor
         val index = currentCodeContext.genDeclareVariable(variableDescriptor, result)
-        if (context.shouldContainDebugInfo()) {
+        if (context.shouldContainDebugInfo() && variableDescriptor.isVar) {
             val location = debugLocation(value)
             val functionScope = (currentCodeContext.functionScope() as FunctionScope).declaration?.scope() ?: return
             val file = (currentCodeContext.fileScope() as FileScope).file.file()
-            val variable = functionGenerationContext.vars.load(index)
+            val variable = functionGenerationContext.vars.addressOf(index)
             val line = value.startLine()
             functionGenerationContext.vars.debugInfoLocalVariableLocation(
                     functionScope = functionScope,
