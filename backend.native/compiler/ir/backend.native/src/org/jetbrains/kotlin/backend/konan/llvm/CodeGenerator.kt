@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.types.KotlinType
 
 internal class CodeGenerator(override val context: Context) : ContextUtils {
 
@@ -142,10 +141,25 @@ internal class FunctionGenerationContext(val function: LLVMValueRef,
         return result
     }
 
-    fun alloca(type: LLVMTypeRef?, name: String = ""): LLVMValueRef {
+    fun alloca(type: LLVMTypeRef?, name: String = "", variableLocation: VariableDebugLocation?): LLVMValueRef {
         if (isObjectType(type!!)) {
             appendingTo(localsInitBb) {
-                return gep(slotsPhi!!, Int32(slotCount++).llvm, name)
+                variableLocation?.let {
+                    memScoped {
+                        val expr = longArrayOf(DwarfOp.DW_OP_plus.value, pointerSize * slotCount.toLong()).toCValues()
+                        DIInsertDeclarationWithExpression(
+                                builder = codegen.context.debugInfo.builder,
+                                value = slotsPhi,
+                                localVariable = it.localVariable,
+                                location = it.location,
+                                bb = localsInitBb,
+                                expr = expr,
+                                exprCount = 2)
+                    }
+                }
+                val v = gep(slotsPhi!!, Int32(slotCount).llvm, name)
+                slotCount++
+                return v
             }
         }
 
@@ -179,7 +193,7 @@ internal class FunctionGenerationContext(val function: LLVMValueRef,
     fun loadSlot(address: LLVMValueRef, isVar: Boolean, name: String = ""): LLVMValueRef {
         val value = LLVMBuildLoad(builder, address, name)!!
         if (isObjectRef(value) && isVar) {
-            val slot = alloca(LLVMTypeOf(value))
+            val slot = alloca(LLVMTypeOf(value), variableLocation = null)
             storeAnyLocal(value, slot)
         }
         return value
