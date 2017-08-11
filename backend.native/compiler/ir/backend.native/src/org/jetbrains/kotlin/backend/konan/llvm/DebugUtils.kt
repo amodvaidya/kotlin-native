@@ -161,30 +161,47 @@ internal fun KotlinType.dwarfType(context:Context, targetData:LLVMTargetDataRef)
         }
         else -> {
             val classDescriptor = TypeUtils.getClassDescriptor(this)
-            if (classDescriptor != null) {
-                /**
-                 * Ideally we'd use [KotlinType.typeInfoSymbolName] here , by type could be not
-                 * exportable.
-                 */
-                DICreateStructType(
-                        refBuilder    = context.debugInfo.builder,
-                        scope         = context.debugInfo.compilationModule as DIScopeOpaqueRef,
-                        name          = "ktype:${classDescriptor.fqNameSafe}",
-                        file          = null,
-                        lineNumber    = 0,
-                        sizeInBits    = 0,
-                        alignInBits   = 0,
-                        flags         = DWARF.flagsForwardDeclaration,
-                        derivedFrom   = null,
-                        elements      = null,
-                        elementsCount = 0,
-                        refPlace      = null)!! as DITypeOpaqueRef
-            }
-            else if (TypeUtils.isTypeParameter(this)){
-                //TODO: Type parameter,  how to deal with if?
-                debugInfoBaseType(context, targetData, this.toString(), llvmType(context), encoding(context).value.toInt())
-            } else {
-                TODO("$this: Does this case really exist?")
+            when {
+                classDescriptor != null ->
+                    @Suppress("ConstantConditionIf")
+                    if (DWARF.dwarfVersion < 5) {
+                        val type = DICreateStructType(
+                                refBuilder = context.debugInfo.builder,
+                                scope = context.debugInfo.compilationModule as DIScopeOpaqueRef,
+                                name = "ObjHeader",
+                                file = null,
+                                lineNumber = 0,
+                                sizeInBits = 0,
+                                alignInBits = 0,
+                                flags = DWARF.flagsForwardDeclaration,
+                                derivedFrom = null,
+                                elements = null,
+                                elementsCount = 0,
+                                refPlace = null)!! as DITypeOpaqueRef
+                        dwarfPointerType(context, type)
+                    } else {
+                        /**
+                         * TODO: This code for on branch debugger-plugin where we have debugger support.
+                         * Ideally we'd use [KotlinType.typeInfoSymbolName] here , by type could be not
+                         * exportable.
+                         */
+                        DICreateStructType(
+                                refBuilder    = context.debugInfo.builder,
+                                scope         = context.debugInfo.compilationModule as DIScopeOpaqueRef,
+                                name          = "ktype:${classDescriptor.fqNameSafe}",
+                                file          = null,
+                                lineNumber    = 0,
+                                sizeInBits    = 0,
+                                alignInBits   = 0,
+                                flags         = DWARF.flagsForwardDeclaration,
+                                derivedFrom   = null,
+                                elements      = null,
+                                elementsCount = 0,
+                                refPlace      = null)!! as DITypeOpaqueRef
+                    }
+                TypeUtils.isTypeParameter(this) -> //TODO: Type parameter,  how to deal with if?
+                    debugInfoBaseType(context, targetData, this.toString(), llvmType(context), encoding(context).value.toInt())
+                else -> TODO("$this: Does this case really exist?")
             }
         }
     }
@@ -242,5 +259,9 @@ private fun KotlinType.referenceOrValue(context: Context, llvmTargetData: LLVMTa
     return if (KotlinBuiltIns.isPrimitiveType(this))
         refType
     else
-        DICreateReferenceType(context.debugInfo.builder, refType) as DITypeOpaqueRef
+        dwarfPointerType(context, refType)
 }
+
+@Suppress("UNCHECKED_CAST")
+private fun dwarfPointerType(context: Context, type: DITypeOpaqueRef) =
+        DICreatePointerType(context.debugInfo.builder, type) as DITypeOpaqueRef

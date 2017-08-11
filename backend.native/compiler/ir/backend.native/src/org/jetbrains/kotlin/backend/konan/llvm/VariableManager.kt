@@ -126,12 +126,6 @@ internal class VariableManager(val functionGenerationContext: FunctionGeneration
                 line = line,
                 type = diType)
 
-        //DIInsertDeclarationWithEmptyExpression(
-        //        builder = functionGenerationContext.context.debugInfo.builder,
-        //        value = variable,
-        //        localVariable = variableDeclaration,
-        //        location = location,
-        //        bb = LLVMGetInsertBlock(functionGenerationContext.builder))
         return VariableDebugLocation(localVariable = variableDeclaration!!, location = location, file = file, line = line)
     }
 }

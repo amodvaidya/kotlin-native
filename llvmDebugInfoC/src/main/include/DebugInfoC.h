@@ -59,6 +59,7 @@ DICompositeTypeRef DICreateArrayType(DIBuilderRef refBuilder,
                                       uint64_t elementsCount);
 
 DIDerivedTypeRef DICreateReferenceType(DIBuilderRef refBuilder, DITypeOpaqueRef refType);
+DIDerivedTypeRef DICreatePointerType(DIBuilderRef refBuilder, DITypeOpaqueRef refType);
 DICompositeTypeRef DICreateReplaceableCompositeType(DIBuilderRef refBuilder,
                                                     int tag,
                                                     const char *name,

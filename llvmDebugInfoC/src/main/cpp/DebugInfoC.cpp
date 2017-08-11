@@ -178,6 +178,12 @@ DIDerivedTypeRef DICreateReferenceType(DIBuilderRef refBuilder, DITypeOpaqueRef 
                       llvm::unwrap(refType)));
 }
 
+DIDerivedTypeRef DICreatePointerType(DIBuilderRef refBuilder, DITypeOpaqueRef refType) {
+  return llvm::wrap(llvm::unwrap(refBuilder)->createReferenceType(
+                      llvm::dwarf::DW_TAG_pointer_type,
+                      llvm::unwrap(refType)));
+}
+
 DISubroutineTypeRef DICreateSubroutineType(DIBuilderRef builder,
                                            DITypeOpaqueRef* types,
                                            unsigned typesCount) {
