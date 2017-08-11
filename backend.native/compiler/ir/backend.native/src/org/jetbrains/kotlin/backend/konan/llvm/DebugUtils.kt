@@ -236,7 +236,7 @@ internal fun KotlinType.encoding(context:Context):DwarfTypeKind {
             return when {
                 this in context.debugInfo.intTypes            -> DwarfTypeKind.DW_ATE_signed
                 this in context.debugInfo.realTypes           -> DwarfTypeKind.DW_ATE_float
-                KotlinBuiltIns.isBoolean(this)                -> DwarfTypeKind.DW_ATE_boolean
+                KotlinBuiltIns.isBoolean(this)          -> DwarfTypeKind.DW_ATE_boolean
                 KotlinBuiltIns.isChar(this)             -> DwarfTypeKind.DW_ATE_unsigned
                 (!KotlinBuiltIns.isPrimitiveType(this)) -> DwarfTypeKind.DW_ATE_address
                 else                                          -> TODO(toString())
