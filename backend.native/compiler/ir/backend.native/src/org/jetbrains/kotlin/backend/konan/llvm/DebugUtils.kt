@@ -104,7 +104,7 @@ internal fun generateDebugInfoHeader(context: Context) {
 
         val path = context.config.outputFile
             .toFileAndFolder()
-
+        @Suppress("UNCHECKED_CAST")
         context.debugInfo.module = DICreateModule(
                 builder = context.debugInfo.builder,
                 scope = context.llvmModule as DIScopeOpaqueRef,
